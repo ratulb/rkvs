@@ -7,7 +7,7 @@ pub struct KvsError;
 impl From<io::Error> for KvsError {
     fn from(err: io::Error) -> Self {
         let msg =  &(err.to_string())[..];
-        eprintln!("{}" , msg);
+        eprintln!("Error {}" , msg);
         KvsError
     }
 }
