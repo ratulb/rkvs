@@ -1,5 +1,6 @@
 use clap::{App, AppSettings, Arg, SubCommand};
-use kvs::{KvStore, KvsError, Result};
+use kvs::KvsEngine;
+use kvs::{KvStore, Result};
 use std::env::current_dir;
 use std::process::exit;
 
@@ -58,11 +59,10 @@ fn main() -> Result<()> {
             match store.remove(key.to_string()) {
                 Ok(()) => {}
                 //Err(KvsError::KeyNotFound) => {
-                Err(KvsError) => {
-                    println!("Key not found");
+                Err(kv_err) => {
+                    println!("{:?}", kv_err);
                     exit(1);
-                }
-                Err(e) => return Err(e),
+                } //Err(e) => return Err(e),
             }
         }
         _ => unreachable!(),

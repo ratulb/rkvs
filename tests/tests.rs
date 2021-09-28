@@ -1,4 +1,5 @@
 use assert_cmd::prelude::*;
+use kvs::KvsEngine;
 use kvs::{KvStore, Result};
 use predicates::ord::eq;
 use predicates::str::{contains, is_empty, PredicateStrExt};
@@ -6,10 +7,17 @@ use std::process::Command;
 use tempfile::TempDir;
 use walkdir::WalkDir;
 
+fn type_of<T>(_: &T) {
+    println!("The type is {:?}", std::any::type_name::<T>());
+}
 // `kvs` with no args should exit with a non-zero code.
 #[test]
 fn cli_no_args() {
-    Command::cargo_bin("kvs").unwrap().assert().failure();
+    println!("This is the test");
+    //Command::cargo_bin("kvs").unwrap().assert().failure();
+    let cmd = Command::cargo_bin("kvs");
+    type_of(&cmd);
+    cmd.unwrap().assert().failure();
 }
 
 // `kvs -V` should print the version
@@ -26,16 +34,29 @@ fn cli_version() {
 #[test]
 fn cli_get_non_existent_key() {
     let temp_dir = TempDir::new().unwrap();
-    Command::cargo_bin("kvs")
-        .unwrap()
-        .args(&["get", "key1"])
-        .current_dir(&temp_dir)
-        .assert()
-        .success()
-        .stdout(eq("Key not found").trim());
+    /***Command::cargo_bin("kvs")
+    .unwrap()
+    .args(&["get", "key1"])
+    .current_dir(&temp_dir)
+    .assert()
+    .success()
+    .stdout(eq("Key not found").trim());***/
+    let mut cmd = Command::cargo_bin("kvs").unwrap();
+    let cmd = cmd.args(&["get", "key1"]).current_dir(&temp_dir);
+    type_of(&cmd);
+    println!("cmd = {:?}", cmd);
+    cmd.assert().success().stdout(eq("Key not found").trim());
 }
 
 // `kvs rm <KEY>` should print "Key not found" for an empty database and exit with non-zero code.
+
+#[test]
+fn kvs_error_test() {
+    use kvs::KvsError;
+    let kvs_err: KvsError = "Key not found".into();
+    assert_eq!(kvs_err.to_string(), "Key not found");
+}
+
 #[test]
 fn cli_rm_non_existent_key() {
     let temp_dir = TempDir::new().expect("unable to create temporary working directory");
@@ -45,7 +66,8 @@ fn cli_rm_non_existent_key() {
         .current_dir(&temp_dir)
         .assert()
         .failure()
-        .stdout(eq("Key not found").trim());
+        //.stdout(eq("Key not found").trim());
+        .stdout(eq("KvsError(\"Key not found\")").trim());
 }
 
 // `kvs set <KEY> <VALUE>` should print nothing and exit with zero.
